@@ -1,7 +1,7 @@
 {
   "$schema": "https://kimi.com/schemas/kimi.plugin.schema.json",
   "name": "axiom-guard",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Constitutional governance for AI agents through the AXIOM Guard API — gate prompts and actions before they execute, screen outputs, redact PII, and produce HMAC-signed audit manifests.",
   "keywords": [
     "axiom",

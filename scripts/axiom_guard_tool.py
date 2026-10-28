@@ -55,7 +55,8 @@ import urllib.request
 DEFAULT_BASE_URL = os.environ.get("AXIOM_BASE_URL", "http://localhost:8001")
 DEFAULT_TIMEOUT = 15
 SIGNING_NAMESPACE = b"axiom-guard-api-v1"
-# /guard/check stamps these onto FTC-reportable manifests after signing them.
+# Guard API builds before 2026-10-28 added these to FTC-reportable
+# manifests after signing them; newer builds sign them.
 POST_SIGNING_FIELDS = ("ftc_report_generated", "ftc_report_id")
 
 
@@ -81,27 +82,45 @@ def verify_manifest(manifest: dict, master_key_hex: str) -> dict:
     `signature`, canonicalised as json.dumps(obj, sort_keys=True), under
     derive_key(b"axiom-guard-api-v1"). The stored signature is either the
     full hex digest or the first 32 hex chars followed by "...".
-    POST_SIGNING_FIELDS are excluded, since the server adds them after signing.
+
+    Older servers left POST_SIGNING_FIELDS outside the signature, so if the
+    whole manifest does not verify, it is retried without them and those
+    fields are reported as `unsigned_fields`.
     """
     sig_field = manifest.get("signature", "")
     if not isinstance(sig_field, str) or not sig_field.startswith("hmac-sha256:"):
         return {"verified": False, "reason": "manifest has no hmac-sha256 signature"}
     presented = sig_field[len("hmac-sha256:"):]
-    body = {k: v for k, v in manifest.items()
-            if k != "signature" and k not in POST_SIGNING_FIELDS}
-    payload = json.dumps(body, sort_keys=True).encode("utf-8")
     key = _load_signing_key(master_key_hex)
-    expected_full = hmac.new(key, payload, hashlib.sha256).hexdigest()
-    expected_truncated = expected_full[:32] + "..."
-    verified = hmac.compare_digest(presented, expected_full) or hmac.compare_digest(
-        presented, expected_truncated
-    )
-    return {
+
+    def _digest(skip: tuple) -> str:
+        body = {k: v for k, v in manifest.items() if k != "signature" and k not in skip}
+        payload = json.dumps(body, sort_keys=True).encode("utf-8")
+        return hmac.new(key, payload, hashlib.sha256).hexdigest()
+
+    def _matches(expected: str) -> bool:
+        return hmac.compare_digest(presented, expected) or hmac.compare_digest(
+            presented, expected[:32] + "..."
+        )
+
+    expected_full = _digest(())
+    unsigned = []
+    verified = _matches(expected_full)
+    # Old servers only added them when ftc_reportable (a signed field) is
+    # true, so they cannot be grafted onto an ordinary manifest.
+    present_late = tuple(f for f in POST_SIGNING_FIELDS if f in manifest)
+    if (not verified and present_late and manifest.get("ftc_reportable") is True
+            and _matches(_digest(present_late))):
+        verified, unsigned = True, list(present_late)
+    result = {
         "verified": verified,
         "presented": presented,
         "expected": expected_full,
         "manifest_id": manifest.get("manifest_id"),
     }
+    if unsigned:
+        result["unsigned_fields"] = unsigned
+    return result
 
 
 def _request(base_url: str, token: str | None, method: str, path: str,
