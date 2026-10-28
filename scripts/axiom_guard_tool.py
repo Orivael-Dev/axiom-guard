@@ -129,6 +129,8 @@ def _request(base_url: str, token: str | None, method: str, path: str,
     data = json.dumps(body).encode("utf-8") if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Content-Type", "application/json")
+    # Cloudflare's bot check rejects urllib's default UA with error 1010.
+    req.add_header("User-Agent", "axiom-guard-plugin/1.0 (+https://github.com/Orivael-Dev/axiom-guard)")
     if token:
         req.add_header("Authorization", f"Bearer {token}")
     try:
