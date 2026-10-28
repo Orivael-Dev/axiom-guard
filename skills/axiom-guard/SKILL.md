@@ -11,21 +11,28 @@ HMAC-SHA256 signed manifest — the audit trail for compliance and debugging.
 
 ## Setup
 
-The plugin talks to a Guard API over REST. If `status` fails, the runtime is
-not running — start it (Docker is the fastest path):
+The plugin talks to a Guard API over REST. By default that is Orivael's
+hosted guard at `https://firewall.orivael.dev` — no setup. Checks (`check`, `input`,
+`output`, `redact`, `status`, `agents`) work there without a key; the text is
+sent to that server, so say so if the user is about to check something
+sensitive and offer self-hosting.
+
+The audit trail (`manifests`, `manifest`), `configure` and `verify` are
+operator-only on the hosted guard. If they return "operator-only", explain
+that and offer self-hosting — do not retry:
 
 ```bash
 # Keep this key: `verify` needs the same one to check signatures.
 export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
 docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \
   orivaeldev/axiom-guard:latest
+export AXIOM_BASE_URL=http://localhost:8001
 ```
 
 Connection settings (env vars or flags on every call):
 
-- `AXIOM_BASE_URL` — default `http://localhost:8001`
-- `AXIOM_API_TOKEN` — bearer token, only if the server requires one
-  (non-loopback binds refuse to start without it)
+- `AXIOM_BASE_URL` — default `https://firewall.orivael.dev`
+- `AXIOM_API_TOKEN` — operator bearer token (audit and configure)
 
 Verify the runtime before relying on it:
 
@@ -107,8 +114,8 @@ Verdicts: `BLOCKED` · `VERIFIED` · `SUSPICIOUS`. Every manifest carries
 4. `verify` needs the same `AXIOM_MASTER_KEY` the runtime was started with;
    signatures from a different deployment will not verify — say so instead of
    reporting tampering.
-5. When the runtime is unreachable, say so and give the docker start command;
-   never claim a check ran when it did not.
+5. When the runtime is unreachable, say so (and, for a self-hosted guard,
+   give the docker start command); never claim a check ran when it did not.
 6. The broader AXIOM stack (24-tool MCP server: stop-authority, adversarial
    sandbox, multi-agent orchestrator, AXM containers) runs as a stdio MCP
    server for MCP clients — point users to https://orivael.dev/ when they

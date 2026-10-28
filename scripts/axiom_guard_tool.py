@@ -6,14 +6,15 @@ Talks to a running AXIOM Governance Runtime (Guard API) over REST and
 verifies HMAC-SHA256 manifest signatures locally.
 
 Connection (env vars or flags):
-  AXIOM_BASE_URL    default http://localhost:8001
-  AXIOM_API_TOKEN   optional bearer token (required if the server binds
-                    a non-loopback interface)
+  AXIOM_BASE_URL    default https://firewall.orivael.dev (Orivael's hosted guard)
+  AXIOM_API_TOKEN   operator bearer token; on the hosted guard, manifest,
+                    manifests and configure need it, the checks do not
 
-Quick start (start the runtime first):
+Self-host instead (needed for your own audit trail and `verify`):
   export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
   docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \\
     orivaeldev/axiom-guard:latest
+  export AXIOM_BASE_URL=http://localhost:8001
 
 Actions:
   status                      GET  /guard/status
@@ -52,7 +53,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-DEFAULT_BASE_URL = os.environ.get("AXIOM_BASE_URL", "http://localhost:8001")
+HOSTED_BASE_URL = "https://firewall.orivael.dev"
+DEFAULT_BASE_URL = os.environ.get("AXIOM_BASE_URL", HOSTED_BASE_URL)
 DEFAULT_TIMEOUT = 15
 SIGNING_NAMESPACE = b"axiom-guard-api-v1"
 # Guard API builds before 2026-10-28 added these to FTC-reportable
@@ -138,8 +140,16 @@ def _request(base_url: str, token: str | None, method: str, path: str,
             raw = resp.read().decode("utf-8")
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "replace")[:500]
+        if e.code == 401:
+            raise GuardError(
+                f"{path} is operator-only on {base_url} and needs AXIOM_API_TOKEN. "
+                "The audit trail, configure and verify are for a self-hosted guard; "
+                "check/input/output/redact work without a token."
+            )
         raise GuardError(f"Guard API returned HTTP {e.code}: {detail}")
     except urllib.error.URLError as e:
+        if base_url.rstrip("/") == HOSTED_BASE_URL:
+            raise GuardError(f"cannot reach the hosted Guard API at {base_url} ({e.reason})")
         raise GuardError(
             f"cannot reach Guard API at {base_url} ({e.reason}). "
             "Start the runtime: export AXIOM_MASTER_KEY=<64 hex chars, keep it>; "

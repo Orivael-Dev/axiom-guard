@@ -23,19 +23,28 @@ axiom-guard/
 └── locales/zh-CN.json        # catalog display metadata
 ```
 
-## Runtime prerequisite
+## Runtime
 
-The plugin talks to a running Guard API (default `http://localhost:8001`):
+By default the plugin uses Orivael's hosted Guard API at
+`https://firewall.orivael.dev` — nothing to install. Checks (`check`, `input`,
+`output`, `redact`, `status`, `agents`) need no key. Text you check is sent to
+that server.
+
+The audit trail (`manifests`, `manifest`), `configure` and `verify` are
+operator features: on the hosted guard they need its operator token, and
+`verify` needs the server's master key. To get them for your own decisions —
+or to keep text on your machine — self-host:
 
 ```bash
 # Keep this key: `verify` needs the same one to check signatures.
 export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
 docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \
   orivaeldev/axiom-guard:latest
+export AXIOM_BASE_URL=http://localhost:8001
 ```
 
-Optional env vars: `AXIOM_BASE_URL`, `AXIOM_API_TOKEN` (bearer, only if the
-server requires auth), `AXIOM_MASTER_KEY` (for `verify`).
+Env vars: `AXIOM_BASE_URL`, `AXIOM_API_TOKEN` (operator bearer token),
+`AXIOM_MASTER_KEY` (for `verify`).
 
 Check it is up before using the plugin:
 

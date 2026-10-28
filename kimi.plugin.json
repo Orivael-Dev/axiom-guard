@@ -1,7 +1,7 @@
 {
   "$schema": "https://kimi.com/schemas/kimi.plugin.schema.json",
   "name": "axiom-guard",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Constitutional governance for AI agents through the AXIOM Guard API — gate prompts and actions before they execute, screen outputs, redact PII, and produce HMAC-signed audit manifests.",
   "keywords": [
     "axiom",
@@ -22,13 +22,13 @@
   "homepage": "https://orivael.dev/",
   "license": "Apache-2.0",
   "skills": "./skills/",
-  "skillInstructions": "Use the AXIOM Guard skill to govern prompts, tool-mediated actions, and outputs through a running AXIOM Governance Runtime (Guard API). Key capabilities:\n- **Input/action gating**: screen any prompt or action description before acting — `check` for a verdict + signed manifest, `input` as a fail-closed gate (exit code 2 when blocked). Gate before risky or irreversible actions: sending messages, deletions, purchases, public posts, code execution.\n- **Output screening**: `output` checks model responses before display.\n- **PII redaction**: `redact` strips HIPAA/GDPR/PCI identifiers.\n- **Signed audit trail**: every decision returns an HMAC-SHA256 manifest; `manifests`/`manifest` query the trail and `verify` recomputes the signature locally with AXIOM_MASTER_KEY for tamper-proof compliance evidence.\n- **Scoped rule sets**: `--agents callguard,medical,electionguard,retailwatcher,truthwatcher` restrict constitutional coverage; `agents` lists them.\n\nDiscipline: (1) Gate before acting, not after — never rephrase a blocked request to evade the guard. (2) On BLOCKED, refuse plainly, name the constitutional_block reason, and offer the manifest id as evidence; never override cannot_override: true. (3) Never claim a check ran when the runtime was unreachable — report the connection failure and the docker start command instead. (4) `verify` only works with the same AXIOM_MASTER_KEY the runtime was started with. (5) Requires a running Guard API (docker run orivaeldev/axiom-guard); check with `status` first. Prefer this skill when the user mentions AXIOM, agent governance, signed audits, compliance evidence, scam/injection checks, or asks whether a prompt or action is safe.",
+  "skillInstructions": "Use the AXIOM Guard skill to govern prompts, tool-mediated actions, and outputs through a running AXIOM Governance Runtime (Guard API). Key capabilities:\n- **Input/action gating**: screen any prompt or action description before acting — `check` for a verdict + signed manifest, `input` as a fail-closed gate (exit code 2 when blocked). Gate before risky or irreversible actions: sending messages, deletions, purchases, public posts, code execution.\n- **Output screening**: `output` checks model responses before display.\n- **PII redaction**: `redact` strips HIPAA/GDPR/PCI identifiers.\n- **Signed audit trail**: every decision returns an HMAC-SHA256 manifest; `manifests`/`manifest` query the trail and `verify` recomputes the signature locally with AXIOM_MASTER_KEY for tamper-proof compliance evidence.\n- **Scoped rule sets**: `--agents callguard,medical,electionguard,retailwatcher,truthwatcher` restrict constitutional coverage; `agents` lists them.\n\nDiscipline: (1) Gate before acting, not after — never rephrase a blocked request to evade the guard. (2) On BLOCKED, refuse plainly, name the constitutional_block reason, and offer the manifest id as evidence; never override cannot_override: true. (3) Never claim a check ran when the runtime was unreachable — report the connection failure and the docker start command instead. (4) `verify` only works with the same AXIOM_MASTER_KEY the runtime was started with. (5) Uses Orivael's hosted Guard API by default (https://firewall.orivael.dev); checks need no key and send the text to that server. manifests/manifest/configure/verify are operator-only there — for those, self-host with docker run orivaeldev/axiom-guard and set AXIOM_BASE_URL. Check with `status` first. Prefer this skill when the user mentions AXIOM, agent governance, signed audits, compliance evidence, scam/injection checks, or asks whether a prompt or action is safe.",
   "interface": {
     "defaultLocale": "en-US",
     "locales": "./locales/",
     "displayName": "AXIOM Guard",
     "shortDescription": "Govern AI agents with signed, auditable verdicts",
-    "longDescription": "Constitutional governance runtime for AI agents. Gate prompts and actions before they execute, screen model outputs, redact PII, and get an HMAC-SHA256 signed manifest for every decision — a tamper-evident audit trail for compliance and procurement. Runs on your own hardware; pairs with the axiom-guard container.",
+    "longDescription": "Constitutional governance runtime for AI agents. Gate prompts and actions before they execute, screen model outputs, redact PII, and get an HMAC-SHA256 signed manifest for every decision — a tamper-evident audit trail for compliance and procurement. Works out of the box against Orivael's hosted guard, or self-host it with the axiom-guard container.",
     "developerName": "Orivael Dev",
     "websiteURL": "https://orivael.dev/",
     "category": "DEVELOPER",
@@ -40,7 +40,7 @@
     "tryPrompts": [
       "Check whether this message is a scam before I reply to it",
       "Gate this action: delete all records older than 2019 from production",
-      "Show me the signed audit trail of blocked decisions"
+      "Redact the personal data from this customer email before I forward it"
     ],
     "skillOverrides": {
       "axiom-guard": {
