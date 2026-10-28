@@ -1,0 +1,17 @@
+{
+  "displayName": "AXIOM Guard",
+  "shortDescription": "为 AI 智能体提供可签名审计的治理防护",
+  "longDescription": "面向 AI 智能体的宪法治理运行时。在提示词与操作执行前进行闸门检查、在模型输出展示前进行筛查、对 PII 进行脱敏，并为每一项决策生成 HMAC-SHA256 签名清单——为合规与采购审查提供防篡改的审计证据。支持本地部署，可与 axiom-guard 容器配合使用。",
+  "developerName": "Orivael Dev",
+  "tryPrompts": [
+    "回复之前帮我检查一下这条消息是不是诈骗",
+    "对这个操作进行防护检查：删除生产环境中 2019 年之前的所有记录",
+    "给我看被拦截决策的签名审计记录"
+  ],
+  "skillOverrides": {
+    "axiom-guard": {
+      "displayName": "AXIOM Guard",
+      "description": "对提示词、操作与输出进行闸门检查；PII 脱敏；验证签名清单；查询审计记录。"
+    }
+  }
+}
