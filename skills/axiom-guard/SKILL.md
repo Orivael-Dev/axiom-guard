@@ -15,8 +15,9 @@ The plugin talks to a Guard API over REST. If `status` fails, the runtime is
 not running — start it (Docker is the fastest path):
 
 ```bash
-docker run -d -p 8001:8001 \
-  -e AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))') \
+# Keep this key: `verify` needs the same one to check signatures.
+export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \
   orivaeldev/axiom-guard:latest
 ```
 

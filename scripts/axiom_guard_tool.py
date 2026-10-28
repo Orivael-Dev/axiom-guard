@@ -11,8 +11,8 @@ Connection (env vars or flags):
                     a non-loopback interface)
 
 Quick start (start the runtime first):
-  docker run -d -p 8001:8001 \\
-    -e AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))') \\
+  export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+  docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \\
     orivaeldev/axiom-guard:latest
 
 Actions:
@@ -55,6 +55,8 @@ import urllib.request
 DEFAULT_BASE_URL = os.environ.get("AXIOM_BASE_URL", "http://localhost:8001")
 DEFAULT_TIMEOUT = 15
 SIGNING_NAMESPACE = b"axiom-guard-api-v1"
+# /guard/check stamps these onto FTC-reportable manifests after signing them.
+POST_SIGNING_FIELDS = ("ftc_report_generated", "ftc_report_id")
 
 
 class GuardError(RuntimeError):
@@ -62,11 +64,11 @@ class GuardError(RuntimeError):
 
 
 def _load_signing_key(master_key_hex: str) -> bytes:
-    """Mirror axiom_signing.derive_key: HMAC-SHA256(salt, master)."""
-    try:
-        master = bytes.fromhex(master_key_hex)
-    except ValueError:
-        raise GuardError("--master-key / AXIOM_MASTER_KEY must be 64 hex chars")
+    """Mirror axiom_signing.derive_key: HMAC-SHA256(salt, master).
+
+    The server keys on the env var's UTF-8 text, not on hex-decoded bytes.
+    """
+    master = master_key_hex.strip().encode("utf-8")
     if not master:
         raise GuardError("master key is empty")
     return hmac.new(SIGNING_NAMESPACE, master, hashlib.sha256).digest()
@@ -79,12 +81,14 @@ def verify_manifest(manifest: dict, master_key_hex: str) -> dict:
     `signature`, canonicalised as json.dumps(obj, sort_keys=True), under
     derive_key(b"axiom-guard-api-v1"). The stored signature is either the
     full hex digest or the first 32 hex chars followed by "...".
+    POST_SIGNING_FIELDS are excluded, since the server adds them after signing.
     """
     sig_field = manifest.get("signature", "")
     if not isinstance(sig_field, str) or not sig_field.startswith("hmac-sha256:"):
         return {"verified": False, "reason": "manifest has no hmac-sha256 signature"}
     presented = sig_field[len("hmac-sha256:"):]
-    body = {k: v for k, v in manifest.items() if k != "signature"}
+    body = {k: v for k, v in manifest.items()
+            if k != "signature" and k not in POST_SIGNING_FIELDS}
     payload = json.dumps(body, sort_keys=True).encode("utf-8")
     key = _load_signing_key(master_key_hex)
     expected_full = hmac.new(key, payload, hashlib.sha256).hexdigest()
@@ -117,8 +121,8 @@ def _request(base_url: str, token: str | None, method: str, path: str,
     except urllib.error.URLError as e:
         raise GuardError(
             f"cannot reach Guard API at {base_url} ({e.reason}). "
-            "Start the runtime: docker run -d -p 8001:8001 "
-            "-e AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))') "
+            "Start the runtime: export AXIOM_MASTER_KEY=<64 hex chars, keep it>; "
+            "docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY "
             "orivaeldev/axiom-guard:latest"
         )
     try:

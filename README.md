@@ -28,8 +28,9 @@ axiom-guard/
 The plugin talks to a running Guard API (default `http://localhost:8001`):
 
 ```bash
-docker run -d -p 8001:8001 \
-  -e AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))') \
+# Keep this key: `verify` needs the same one to check signatures.
+export AXIOM_MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+docker run -d --name axiom-guard -p 8001:8001 -e AXIOM_MASTER_KEY \
   orivaeldev/axiom-guard:latest
 ```
 
