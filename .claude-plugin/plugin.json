@@ -1,7 +1,7 @@
 {
   "name": "axiom-guard",
   "version": "1.2.0",
-  "description": "Constitutional governance for AI agents: gate prompts and actions before they execute, screen outputs, redact PII, and get HMAC-signed audit manifests through the AXIOM Guard API — plus NodeXLoop's offline guard, loop compile-check and sim tools for building governed agent loops.",
+  "description": "Constitutional governance for AI agents: gate prompts and actions before they execute, screen outputs and redact PII through the AXIOM Guard, with an HMAC-signed manifest for every decision. Free tier runs on Orivael's public keyless guard — no setup, no API key.",
   "author": {
     "name": "Orivael Dev",
     "url": "https://orivael.dev/"
@@ -20,9 +20,6 @@
     "scam detection",
     "PII redaction",
     "signed manifest",
-    "nodexloop",
-    "agent loops",
     "mcp"
-  ],
-  "skills": "./claude/skills/"
+  ]
 }

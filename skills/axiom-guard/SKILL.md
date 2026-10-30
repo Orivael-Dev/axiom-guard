@@ -12,11 +12,20 @@ HMAC-SHA256 signed manifest — the audit trail for compliance and debugging.
 ## MCP tools or script
 
 If the `guard_*` MCP tools from this plugin's `axiom-guard` server are
-available (Claude Code), use them. They map one-to-one onto the script
-actions below: `guard_status`, `guard_check`, `guard_input`, `guard_output`,
-`guard_redact`, `guard_agents`, `guard_manifests`, `guard_manifest`,
-`guard_verify`, `guard_configure`. Otherwise run the script. Either way,
-the setup and discipline rules below apply.
+available (claude.ai, Cowork and Claude Code), use them. They map one-to-one
+onto the script actions below:
+
+- **Free tier, always available:** `guard_status`, `guard_check`,
+  `guard_input`, `guard_output`, `guard_redact`, `guard_agents`. These run on
+  Orivael's public keyless guard at `https://mcp.orivael.dev/guard/mcp`.
+- **Self-host only:** `guard_manifests`, `guard_manifest`, `guard_verify`,
+  `guard_configure`. They appear only when the user has registered the local
+  server (`mcp/axiom_guard_mcp.mjs`) against their own guard. If a user asks
+  for the audit trail or signature verification and these tools are missing,
+  explain that they need a self-hosted guard. Don't pretend they ran.
+
+Without MCP tools, run the script. Either way, the setup and discipline rules
+below apply.
 
 ## Setup
 

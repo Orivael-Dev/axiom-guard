@@ -1,12 +1,8 @@
 {
   "mcpServers": {
     "axiom-guard": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/axiom_guard_mcp.mjs"]
-    },
-    "nodexloop": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/nodexloop/mcp/launch.mjs"]
+      "type": "http",
+      "url": "https://mcp.orivael.dev/guard/mcp"
     }
   }
 }
