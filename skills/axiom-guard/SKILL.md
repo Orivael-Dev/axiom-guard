@@ -1,6 +1,6 @@
 ---
 name: axiom-guard
-description: "Constitutional governance for AI agents via the AXIOM Guard API — gate prompts and agent actions before they execute, screen model outputs before display, redact PII (HIPAA/GDPR/PCI), verify HMAC-SHA256 signed decision manifests, and query the signed audit trail. Use when the user asks to check whether a prompt, message, or action is safe or compliant; before performing risky or irreversible tool-mediated actions (sending emails/messages, deleting data, making purchases, posting publicly, executing code, calling external APIs); when prompt injection or scam/deception content is suspected (IRS/gift-card demands, impersonation, coercion); when the user needs PII redaction; when the user mentions AXIOM, constitutional governance, signed audit trails, EU AI Act / FTC / compliance evidence, or agent safety guardrails."
+description: "Constitutional governance for AI agents via the AXIOM Guard API — gate prompts and agent actions before they execute, screen model outputs before display, redact PII (HIPAA/GDPR/PCI), verify HMAC-SHA256 signed decision manifests, and query the signed audit trail. Use when the user asks to check whether a prompt, message, or action is safe or compliant; before performing risky or irreversible tool-mediated actions (sending emails/messages, deleting data, making purchases, posting publicly, executing code, calling external APIs); when prompt injection or scam/deception content is suspected (IRS/gift-card demands, impersonation, coercion), including elder fraud aimed at seniors (grandparent emergencies, Medicare/SSA calls, tech support); when the user needs PII redaction; when the user mentions AXIOM, constitutional governance, signed audit trails, EU AI Act / FTC / compliance evidence, or agent safety guardrails."
 ---
 
 # AXIOM Guard
@@ -79,11 +79,15 @@ from the plugin root, not from inside `skills/<name>/`.
      can gate a pipeline.
    - `output` — screen content before display.
    - `redact` — strip PII (HIPAA/GDPR/PCI) from text before it leaves the
-     environment.
+     environment. A critic pass re-scans the output; if `critic.clean` is
+     not `true`, don't send the text on.
 3. **Honor the verdict:**
    - `BLOCKED` → do not proceed. Tell the user it was blocked, name the
      `constitutional_block` reason, and offer the manifest id as evidence.
      Never override a manifest with `cannot_override: true`.
+     If the manifest carries `senior_help` (elder-fraud blocks such as
+     `GRANDPARENT_EMERGENCY` or `SSA_NUMBER_SUSPENDED`), pass its hotline
+     numbers and advice on plainly: the person reading may be the target.
    - `VERIFIED` → proceed, and keep the manifest id if the action was
      high-stakes (it is the audit receipt).
    - `SUSPICIOUS` → proceed only with care; surface the warning to the user
@@ -95,8 +99,12 @@ from the plugin root, not from inside `skills/<name>/`.
    - `verify --master-key $AXIOM_MASTER_KEY --file <manifest.json>` — recompute
      the HMAC locally to prove a manifest was not tampered with.
 5. **Scope checks when relevant.** `--agents callguard,medical` restricts the
-   constitutional rule set (scam calls, medical misinformation, election
-   content, fake reviews). List what is available with `agents`.
+   constitutional rule set (scam calls, elder fraud, medical misinformation,
+   election content, fake reviews). List what is available with `agents`.
+   `elderguard` covers the scams that cost older adults the most:
+   grandparent emergencies, SSA / Medicare / IRS / police impersonation,
+   tech support, bank "safe account", romance, prize fees and
+   guaranteed-return investments.
 
 ## Script reference
 
