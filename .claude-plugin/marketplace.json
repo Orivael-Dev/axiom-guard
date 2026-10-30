@@ -1,0 +1,26 @@
+{
+  "name": "orivael",
+  "owner": {
+    "name": "Orivael Dev",
+    "url": "https://orivael.dev/"
+  },
+  "metadata": {
+    "description": "Orivael's Claude Code plugins: AXIOM governance and NodeXLoop agent-loop tooling."
+  },
+  "plugins": [
+    {
+      "name": "axiom-guard",
+      "source": "./",
+      "description": "Gate prompts, actions and outputs through the AXIOM Guard API with signed audit manifests, redact PII, and build governed agent loops with NodeXLoop's offline guard, compile-check and sim tools.",
+      "version": "1.2.0",
+      "author": {
+        "name": "Orivael Dev"
+      },
+      "homepage": "https://orivael.dev/",
+      "repository": "https://github.com/Orivael-Dev/axiom-guard",
+      "license": "Apache-2.0",
+      "category": "security",
+      "keywords": ["governance", "agent safety", "audit", "PII redaction", "nodexloop", "mcp"]
+    }
+  ]
+}
