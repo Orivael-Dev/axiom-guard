@@ -12,9 +12,6 @@ Kimi and Claude Code plugin for the [AXIOM Governance Runtime](https://orivael.d
 - **Produce evidence** — every decision returns an HMAC-SHA256 signed manifest;
   query the trail (`manifests`, `manifest`) and verify signatures locally
   (`verify`).
-- **Build governed agent loops** (Claude Code only) — NodeXLoop's offline
-  guard, `.loop.yaml` compile check, sim runs, trace replay and a gated Python
-  package resolver, as the `nodexloop` MCP server.
 
 ## Layout
 
@@ -24,12 +21,10 @@ axiom-guard/
 ├── .claude-plugin/
 │   ├── plugin.json               # Claude Code plugin manifest
 │   └── marketplace.json          # this repo is also a Claude Code marketplace
-├── .mcp.json                     # Claude Code: the two MCP servers below
-├── skills/axiom-guard/           # SKILL.md — governance workflow (both hosts)
-├── claude/skills/nodexloop/      # SKILL.md — loop workflow (Claude Code only)
+├── .mcp.json                     # Claude: the public keyless guard (remote MCP)
+├── skills/axiom-guard/           # SKILL.md — governance workflow (all hosts)
 ├── scripts/axiom_guard_tool.py   # Guard API REST client (stdlib only)
-├── mcp/axiom_guard_mcp.mjs       # Guard API as MCP tools (guard_*), Node 18+
-├── nodexloop/                    # vendored NodeXLoop MCP engine (nxl_*), see VENDORED.md
+├── mcp/axiom_guard_mcp.mjs       # local MCP server for a self-hosted guard, Node 18+
 └── locales/zh-CN.json            # Kimi catalog display metadata
 ```
 
@@ -69,27 +64,43 @@ In the Kimi Work desktop app, open the plugin market → 「自定义插件」 (
 Builder validates `kimi.plugin.json` and registers the plugin under the
 「个人」 tab; click ＋ there to install it.
 
-## Install in Claude Code
+## Install in Claude (claude.ai, Cowork, Claude Code)
 
-Needs Node 18+ on PATH. `guard_verify` also needs Python 3.
+The plugin connects to Orivael's public keyless guard at
+`https://mcp.orivael.dev/guard/mcp`. You don't need to install anything or
+have an API key, and it works on every Claude surface. Its six free-tier tools
+are `guard_status`, `guard_check`, `guard_input`, `guard_output`,
+`guard_redact` and `guard_agents`. They're rule-based and make no model
+calls. Text you check is sent to that server. It isn't logged, but don't send
+secrets.
+
+From a terminal:
 
 ```
-/plugin marketplace add Orivael-Dev/axiom-guard
-/plugin install axiom-guard@orivael
+claude plugin marketplace add Orivael-Dev/axiom-guard
+claude plugin install axiom-guard@orivael
 ```
 
-Restart Claude Code, then run `/mcp`. Two servers should show as connected:
+Or, inside a Claude Code session:
+`/plugin install axiom-guard --marketplace Orivael-Dev/axiom-guard`.
 
-- `axiom-guard`, with the tools `guard_status`, `guard_check`, `guard_input`,
-  `guard_output`, `guard_redact`, `guard_agents`, `guard_manifests`,
-  `guard_manifest`, `guard_verify` and `guard_configure`. They make the same
-  calls as `scripts/axiom_guard_tool.py` and read the same env vars.
-- `nodexloop`, with the tools `nxl_guard_preflight`, `nxl_build_loop`,
-  `nxl_compile_check`, `nxl_sim_loop`, `nxl_get_trace`,
-  `nxl_module_resolve`, `nxl_build_and_harden` and `nxl_suggest_templates`.
-  These run offline, make no model calls and have no live-run tool. Runs and
-  receipts are written to `.nodexloop/` in the project (`NXL_MCP_STATE`
-  overrides).
+Then run `/mcp`. `axiom-guard` should show as connected.
 
-To try a local checkout without installing it:
+To try a local checkout without installing it, run
 `claude --plugin-dir /path/to/axiom-guard`.
+
+### Self-hosted guard: audit trail and verify
+
+The audit trail, `verify` and `configure` need your own guard (see
+[Runtime](#runtime)). Register the local server against it. It needs Node
+18+, and `guard_verify` also needs Python 3:
+
+```bash
+claude mcp add axiom-guard-local -s user \
+  -e AXIOM_BASE_URL=http://localhost:8001 -e AXIOM_MASTER_KEY \
+  -- node /path/to/axiom-guard/mcp/axiom_guard_mcp.mjs
+```
+
+That server adds `guard_manifests`, `guard_manifest`, `guard_verify` and
+`guard_configure` to the six above. It reads the same env vars as
+`scripts/axiom_guard_tool.py`.
