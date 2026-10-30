@@ -9,6 +9,15 @@ Use this skill to govern prompts, actions, and outputs through a running
 AXIOM Governance Runtime (Guard API). Every verdict comes back as an
 HMAC-SHA256 signed manifest — the audit trail for compliance and debugging.
 
+## MCP tools or script
+
+If the `guard_*` MCP tools from this plugin's `axiom-guard` server are
+available (Claude Code), use them. They map one-to-one onto the script
+actions below: `guard_status`, `guard_check`, `guard_input`, `guard_output`,
+`guard_redact`, `guard_agents`, `guard_manifests`, `guard_manifest`,
+`guard_verify`, `guard_configure`. Otherwise run the script. Either way,
+the setup and discipline rules below apply.
+
 ## Setup
 
 The plugin talks to a Guard API over REST. By default that is Orivael's

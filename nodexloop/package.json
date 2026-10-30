@@ -1,0 +1,6 @@
+{
+  "name": "nodexloop-root",
+  "private": true,
+  "description": "Pins nodexloop/**/*.js to CommonJS so an ESM package.json higher up the tree (e.g. a stray \"type\": \"module\" at the repo root) cannot break the MCP engine's require() of the guard kernel.",
+  "type": "commonjs"
+}
